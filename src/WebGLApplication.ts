@@ -55,8 +55,14 @@ export default class WebGLApplication {
 
         this.canvas.style.width = `${this.renderWidth}px`
         this.canvas.style.height = `${this.renderHeight}px`
-        this.canvas.width = Math.max(1, Math.round(this.renderWidth * pixelRatio))
-        this.canvas.height = Math.max(1, Math.round(this.renderHeight * pixelRatio))
+        this.canvas.width = Math.max(
+            1,
+            Math.round(this.renderWidth * pixelRatio)
+        )
+        this.canvas.height = Math.max(
+            1,
+            Math.round(this.renderHeight * pixelRatio)
+        )
         this.context?.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0)
         this.eyeballsManager.resize(this.renderWidth, this.renderHeight)
     }
@@ -87,7 +93,10 @@ export default class WebGLApplication {
      */
     setupEventListeners() {
         window.addEventListener('resize', this.resizeHandler.bind(this))
-        window.addEventListener('pointerdown', this.pointerMoveHandler.bind(this))
+        window.addEventListener(
+            'pointerdown',
+            this.pointerMoveHandler.bind(this)
+        )
         window.addEventListener(
             'pointermove',
             this.pointerMoveHandler.bind(this)
@@ -117,7 +126,6 @@ export default class WebGLApplication {
      * Debug
      */
     createDebugger() {
-        if (import.meta.env.PROD) return
         const gui = new GUI().close()
         gui.addColor(params, 'backgroundColor').name('backgroundColor')
 
