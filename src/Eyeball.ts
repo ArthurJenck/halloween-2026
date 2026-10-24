@@ -3,6 +3,9 @@ import { createNoise2D } from 'simplex-noise'
 type EyeballParams = {
     irisMotionFactor: number
     irisMaxOffset: number
+    irisMinSize: number
+    irisMaxSize: number
+    irisGrowthDistance: number
     middlePartMotionFactor: number
     eyeMinSize: number
     eyeMaxSize: number
@@ -76,23 +79,35 @@ export default class Eyeball {
         }
     }
 
+    getIrisSize(distance: number) {
+        const proximity = Math.max(
+            0,
+            1 - distance / this.params.irisGrowthDistance
+        )
+        return (
+            this.params.irisMinSize +
+            (this.params.irisMaxSize - this.params.irisMinSize) * proximity
+        )
+    }
+
     createGradient(
         context: CanvasRenderingContext2D,
         center: { x: number; y: number },
-        irisOffset: { x: number; y: number }
+        irisOffset: { x: number; y: number },
+        irisSize: number
     ) {
         const gradient = context.createRadialGradient(
             center.x + irisOffset.x * this.params.middlePartMotionFactor,
             center.y + irisOffset.y * this.params.middlePartMotionFactor,
-            40,
+            irisSize,
             center.x + irisOffset.x,
             center.y + irisOffset.y,
             15
         )
-        gradient.addColorStop(0.95, 'black')
-        gradient.addColorStop(0.94, this.params.accentColor)
-        gradient.addColorStop(0.41, this.params.accentColor)
         gradient.addColorStop(0.4, 'white')
+        gradient.addColorStop(0.41, this.params.accentColor)
+        gradient.addColorStop(0.94, this.params.accentColor)
+        gradient.addColorStop(0.95, 'black')
 
         return gradient
     }
@@ -107,8 +122,14 @@ export default class Eyeball {
         const center = this.getTrembleCenter(distance, time)
         const scale = this.getScale(distance)
         const irisOffset = this.getIrisOffset(dx, dy, distance)
+        const irisSize = this.getIrisSize(distance)
 
-        context.fillStyle = this.createGradient(context, center, irisOffset)
+        context.fillStyle = this.createGradient(
+            context,
+            center,
+            irisOffset,
+            irisSize
+        )
         context.beginPath()
         context.arc(center.x, center.y, scale, 0, 2 * Math.PI)
         context.fill()

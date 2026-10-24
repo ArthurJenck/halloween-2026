@@ -1,6 +1,10 @@
 import GUI from 'lil-gui'
 import EyeballsManager from './EyeballsManager'
 
+const params = {
+    backgroundColor: '#752b0b',
+}
+
 export default class WebGLApplication {
     renderWidth: number
     renderHeight: number
@@ -45,6 +49,7 @@ export default class WebGLApplication {
     resize() {
         this.canvas.width = this.renderWidth
         this.canvas.height = this.renderHeight
+        this.eyeballsManager.resize(this.renderWidth, this.renderHeight)
     }
 
     createEyeballsManager() {
@@ -63,7 +68,7 @@ export default class WebGLApplication {
         if (!this.context) return
 
         this.context.clearRect(0, 0, this.renderWidth, this.renderHeight)
-        this.context.fillStyle = '#141414'
+        this.context.fillStyle = params.backgroundColor
         this.context.fillRect(0, 0, this.renderWidth, this.renderHeight)
         this.eyeballsManager.tick(performance.now() / 1000)
     }
@@ -103,7 +108,8 @@ export default class WebGLApplication {
      */
     createDebugger() {
         if (import.meta.env.PROD) return
-        const gui = new GUI()
+        const gui = new GUI().close()
+        gui.addColor(params, 'backgroundColor').name('backgroundColor')
 
         return gui
     }
