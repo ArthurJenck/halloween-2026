@@ -5,4 +5,9 @@
 
 canvas {
     display: block;
+    touch-action: none;
+}
+
+body {
+    overflow: hidden;
 }

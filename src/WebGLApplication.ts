@@ -2,7 +2,7 @@ import GUI from 'lil-gui'
 import EyeballsManager from './EyeballsManager'
 
 const params = {
-    backgroundColor: '#752b0b',
+    backgroundColor: '#570000',
 }
 
 export default class WebGLApplication {
@@ -47,8 +47,17 @@ export default class WebGLApplication {
     }
 
     resize() {
-        this.canvas.width = this.renderWidth
-        this.canvas.height = this.renderHeight
+        const pixelRatio = Math.min(
+            window.devicePixelRatio || 1,
+            2,
+            Math.sqrt(4_000_000 / (this.renderWidth * this.renderHeight))
+        )
+
+        this.canvas.style.width = `${this.renderWidth}px`
+        this.canvas.style.height = `${this.renderHeight}px`
+        this.canvas.width = Math.max(1, Math.round(this.renderWidth * pixelRatio))
+        this.canvas.height = Math.max(1, Math.round(this.renderHeight * pixelRatio))
+        this.context?.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0)
         this.eyeballsManager.resize(this.renderWidth, this.renderHeight)
     }
 
@@ -78,6 +87,7 @@ export default class WebGLApplication {
      */
     setupEventListeners() {
         window.addEventListener('resize', this.resizeHandler.bind(this))
+        window.addEventListener('pointerdown', this.pointerMoveHandler.bind(this))
         window.addEventListener(
             'pointermove',
             this.pointerMoveHandler.bind(this)
@@ -91,7 +101,7 @@ export default class WebGLApplication {
         this.resize()
     }
 
-    pointerMoveHandler(e: MouseEvent) {
+    pointerMoveHandler(e: PointerEvent) {
         this.pointerPosition.x = e.clientX
         this.pointerPosition.y = e.clientY
 
