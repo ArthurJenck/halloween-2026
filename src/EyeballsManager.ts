@@ -20,6 +20,10 @@ const params = {
     trembleRadius: 250,
     trembleMinSpeed: 6,
     trembleMaxSpeed: 12,
+    idleLookDelay: 1.6,
+    idleLookTransition: 0.45,
+    pointerLookTransition: 0.2,
+    idleLookTrembleAmplitude: 1.5,
     accentColor: '#ff0000',
 }
 
@@ -28,6 +32,9 @@ export default class EyeballsManager {
     gui: GUI | undefined
     eyeballs: Eyeball[]
     lookTarget: { x: number; y: number }
+    idleElapsed = 0
+    idleBlend = 0
+    lastTickTime: number | null = null
     gridNoise2D = createNoise2D()
     width: number
     height: number
@@ -89,10 +96,31 @@ export default class EyeballsManager {
     setLookTarget(target: { x: number; y: number }) {
         this.lookTarget.x = target.x
         this.lookTarget.y = target.y
+        this.idleElapsed = 0
     }
 
     tick(time: number) {
-        this.eyeballs.forEach((eyeball) => eyeball.draw(this.lookTarget, time))
+        let deltaTime = 0
+        if (this.lastTickTime !== null) {
+            deltaTime = Math.max(0, time - this.lastTickTime)
+            this.idleElapsed += deltaTime
+        }
+        this.lastTickTime = time
+
+        const isIdle = this.idleElapsed >= params.idleLookDelay
+        const transition = isIdle
+            ? params.idleLookTransition
+            : params.pointerLookTransition
+        const blendStep = transition
+            ? Math.min(deltaTime, 0.05) / transition
+            : 1
+        this.idleBlend = Math.max(
+            0,
+            Math.min(1, this.idleBlend + (isIdle ? blendStep : -blendStep))
+        )
+        this.eyeballs.forEach((eyeball) =>
+            eyeball.draw(this.lookTarget, time, this.idleBlend)
+        )
     }
 
     /**
@@ -126,6 +154,10 @@ export default class EyeballsManager {
         eyeballsFolder.add(params, 'trembleRadius', 1, 800, 1)
         eyeballsFolder.add(params, 'trembleMinSpeed', 0, 20, 0.1)
         eyeballsFolder.add(params, 'trembleMaxSpeed', 0, 20, 0.1)
+        eyeballsFolder.add(params, 'idleLookDelay', 0, 10, 0.1)
+        eyeballsFolder.add(params, 'idleLookTransition', 0, 2, 0.05)
+        eyeballsFolder.add(params, 'pointerLookTransition', 0, 2, 0.05)
+        eyeballsFolder.add(params, 'idleLookTrembleAmplitude', 0, 30, 0.1)
         eyeballsFolder.addColor(params, 'accentColor')
     }
 }

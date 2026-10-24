@@ -15,6 +15,7 @@ type EyeballParams = {
     trembleRadius: number
     trembleMinSpeed: number
     trembleMaxSpeed: number
+    idleLookTrembleAmplitude: number
     accentColor: string
 }
 
@@ -37,16 +38,19 @@ export default class Eyeball {
         this.coords = coords
     }
 
-    getTrembleCenter(distance: number, time: number) {
+    getTrembleCenter(distance: number, time: number, idleBlend: number) {
         const near = Math.max(0, 1 - distance / this.params.trembleRadius)
         const proximity = near * near * (3 - 2 * near)
         const amplitude =
-            this.params.trembleIdleAmplitude +
-            this.params.trembleNearAmplitude * proximity
+            (this.params.trembleIdleAmplitude +
+                this.params.trembleNearAmplitude * proximity) *
+                (1 - idleBlend) +
+            this.params.idleLookTrembleAmplitude * idleBlend
         const speed =
             this.params.trembleMinSpeed +
             (this.params.trembleMaxSpeed - this.params.trembleMinSpeed) *
-                proximity
+                proximity *
+                (1 - idleBlend)
 
         if (this.lastDrawTime !== null) {
             const deltaTime = Math.max(0, Math.min(time - this.lastDrawTime, 0.05))
@@ -112,17 +116,24 @@ export default class Eyeball {
         return gradient
     }
 
-    draw(lookTarget: { x: number; y: number }, time: number) {
+    draw(lookTarget: { x: number; y: number }, time: number, idleBlend: number) {
         const context = this.context
         if (!context) return
 
         const dx = lookTarget.x - this.coords.x
         const dy = lookTarget.y - this.coords.y
         const distance = Math.sqrt(dx * dx + dy * dy)
-        const center = this.getTrembleCenter(distance, time)
-        const scale = this.getScale(distance)
+        const pointerBlend = 1 - idleBlend
+        const center = this.getTrembleCenter(distance, time, idleBlend)
+        const scale =
+            this.getScale(distance) * pointerBlend +
+            this.params.eyeMinSize * idleBlend
         const irisOffset = this.getIrisOffset(dx, dy, distance)
-        const irisSize = this.getIrisSize(distance)
+        irisOffset.x *= pointerBlend
+        irisOffset.y *= pointerBlend
+        const irisSize =
+            this.getIrisSize(distance) * pointerBlend +
+            this.params.irisMinSize * idleBlend
 
         context.fillStyle = this.createGradient(
             context,
